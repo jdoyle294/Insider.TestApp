@@ -1,0 +1,18 @@
+.article {
+    width: 18rem;
+    margin: 1rem;
+    min-width: 18rem;
+}
+
+.card-columns {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+button {
+    margin-right: 15px;
+}
+
+.card-text {
+    min-height: 3rem;
+}

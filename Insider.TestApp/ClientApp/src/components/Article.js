@@ -1,63 +1,55 @@
-import React, { Component } from 'react';
-import { ButtonGroup, Button } from "reactstrap";
+import React, {useState} from 'react';
+import {Button, Card, CardBody, CardTitle, CardSubtitle, CardText} from "reactstrap";
+import Moment from "moment";
+import './Article.css';
+import {useHistory} from "react-router-dom";
 
-export class Article extends Component {
-    static displayName = Article.name;
+const Article = (props) => {
+    const [article, setArticle] = useState({
+        title: props.article ? props.article.title : '',
+        author: props.article ? props.article.author : '',
+        id: props.article ? props.article.id : '',
 
-    constructor(props) {
-        super(props);
-        this.state = { article: {} };
-    }
+        // date and body are optional - account for possible null value
+        publicationDate: props.article ? props.article.publicationDate ?? '' : '',
+        body: props.article ? props.article.body ?? '' : ''
+    });
 
-    componentDidMount() {
-        this.populateArticle();
-    }
+    const { title, author, publicationDate, body, id } = article;
 
-    static renderArticlesTable(articles) {
-        return (
-            <table className='table table-striped' aria-labelledby="tableLabel">
-                <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Author</th>
-                    <th>Publication Date</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                {articles.map(article =>
-                    <tr key={article.id}>
-                        <td>{article.title}</td>
-                        <td>{article.author}</td>
-                        <td>{article.publicationDate}</td>
-                        <td><ButtonGroup aria-label="article actions">
-                            <Button>View</Button>
-                            <Button>Edit</Button>
-                            <Button>Right</Button>
-                        </ButtonGroup></td>
-                    </tr>
-                )}
-                </tbody>
-            </table>
-        );
-    }
+    let history = useHistory();
+    
+    const onEditClick = () => {
+        history.push(`/edit/${id}`);
+    };
+    
+    const onDeleteClick = () => {
+        (async () => {
+            const rawResponse = await fetch(`https://localhost:7062/article/${article.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
 
-    render() {
-        let contents = this.state.loading
-            ? <p><em>Loading...</em></p>
-            : Article.renderArticlesTable(this.state.articles);
+            props.setArticles((prevState) => prevState.filter((a) => a.id !== article.id));
+        })();
+    };
+    
+    return (
+        <Card className="article" key={id}>
+            <CardBody>
+                <CardTitle>{title}</CardTitle>
+                <CardSubtitle>by {author}</CardSubtitle>
+                <CardSubtitle>published on {Moment(publicationDate).format('MM/DD/YYYY')}</CardSubtitle>
+                <hr />
+                <CardText>{body}</CardText>
+                <Button color="primary" onClick={onEditClick}>Edit</Button>
+                <Button color="danger" onClick={onDeleteClick}>Delete</Button>
+            </CardBody>
+        </Card>
+    );
+};
 
-        return (
-            <div>
-                <h1 id="tableLabel" >Articles</h1>
-                {contents}
-            </div>
-        );
-    }
-
-    async populateArticle() {
-        const response = await fetch('https://localhost:7062/article');
-        const data = await response.json();
-        this.setState({ articles: data, loading: false });
-    }
-}
+export default Article;

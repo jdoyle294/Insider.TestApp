@@ -17,7 +17,7 @@ public class ArticleController : ControllerBase
         (_logger, _dbContext) =
         (logger, dbContext);
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Article))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByIdAsync(Guid id)
@@ -35,7 +35,13 @@ public class ArticleController : ControllerBase
     [HttpGet]
     public async Task<IEnumerable<Article>> GetAllAsync() => await _dbContext.Articles.ToArrayAsync();
 
-    [HttpDelete("{id}")]
+    [HttpGet("search/{title}")]
+    public async Task<IEnumerable<Article>> SearchByTitleAsync(string title) =>
+        await _dbContext.Articles
+            .Where(a => a.Title.Contains(title))
+            .ToArrayAsync();
+    
+    [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteAsync(Guid id)

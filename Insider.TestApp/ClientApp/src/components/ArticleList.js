@@ -1,63 +1,65 @@
-import React, { Component } from 'react';
-import { ButtonGroup, Button } from "reactstrap";
+import React, {useEffect, useState} from 'react';
+import {CardColumns, FormGroup, Input, Label} from "reactstrap";
+import Article from "./Article";
+import {Link} from "react-router-dom";
 
-export class ArticleList extends Component {
-  static displayName = ArticleList.name;
+const ArticleList = () => {
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filteredArticles, setFilteredArticles] = useState([]);
 
-  constructor(props) {
-    super(props);
-    this.state = { articles: [], loading: true };
-  }
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('https://localhost:7062/article');
+        const data = await response.json();
+        setArticles(data);
+        setFilteredArticles(data);
+        setLoading(false);
+      } catch (error) {
+        console.log("error", error);
+      }
+    };
 
-  componentDidMount() {
-    this.populateArticleList();
-  }
-
-  static renderArticlesTable(articles) {
+    fetchData();
+  }, []);
+  
+  useEffect(() => {
+    if (search === '') {
+      setFilteredArticles(articles);
+    } else {
+      setFilteredArticles(articles.filter((a) => a.title.includes(search)));
+    }
+  }, [search]);
+  
+  const renderArticlesList = (articles) => {
     return (
-      <table className='table table-striped' aria-labelledby="tableLabel">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Author</th>
-            <th>Publication Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {articles.map(article =>
-            <tr key={article.id}>
-              <td>{article.title}</td>
-              <td>{article.author}</td>
-              <td>{article.publicationDate}</td>
-              <td><ButtonGroup aria-label="article actions">
-                <Button>View</Button>
-                <Button>Edit</Button>
-                <Button>Right</Button>
-              </ButtonGroup></td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+        <CardColumns>
+          {articles.map((article) => (<Article article={article} key={article.id} setArticles={setArticles} />))}
+        </CardColumns>
     );
-  }
+  };
 
-  render() {
-    let contents = this.state.loading
+  let contents = loading
       ? <p><em>Loading...</em></p>
-      : ArticleList.renderArticlesTable(this.state.articles);
+      : renderArticlesList(filteredArticles);
 
-    return (
+  return (
       <div>
-        <h1 id="tableLabel" >Articles</h1>
+        <h1 style={{display: "inline-block"}}>Articles</h1>
+        <Link to={`/create`} style={{marginLeft: "15px"}}>Create New Article</Link>
+        <Input
+            className="input-control"
+            type="text"
+            name="search"
+            value={search}
+            placeholder="Search by title"
+            onChange={ e => setSearch(e.target.value) }
+        />
         {contents}
       </div>
-    );
-  }
+  );
+};
 
-  async populateArticleList() {
-    const response = await fetch('https://localhost:7062/article');
-    const data = await response.json();
-    this.setState({ articles: data, loading: false });
-  }
-}
+export default ArticleList;
