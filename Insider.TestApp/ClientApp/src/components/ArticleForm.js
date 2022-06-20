@@ -20,12 +20,17 @@ const ArticleForm = (props) => {
         event.preventDefault();
         let errorMsg = '';
         
-        const formValid =
+        const fieldsPopulated =
             title.trim() !== '' && title.trim() !== '0' &&
             author.trim() !== '' && author.trim() !== '0' &&
             validator.isDate(publicationDate);
         
-        if (formValid) {
+        const fieldLengthValid =
+            title.trim().length <= 50 &&
+            author.trim().length <= 50 &&
+            body.trim().length <= 1000;
+        
+        if (fieldsPopulated && fieldLengthValid) {
             const article = {
                 title,
                 author,
@@ -36,7 +41,11 @@ const ArticleForm = (props) => {
             
             props.handleOnSubmit(article);
         } else {
-            errorMsg = 'Title, Author, and Publication Date are required fields.';
+            if (!fieldsPopulated)
+                errorMsg += 'Title, Author, and Publication Date are required fields. ';
+            
+            if (!fieldLengthValid)
+                errorMsg += 'Title and Author must be <= 50 characters and Body must be <= 1000 characters.';
         }
         
         setErrorMsg(errorMsg);
